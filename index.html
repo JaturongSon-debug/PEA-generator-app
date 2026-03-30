@@ -218,6 +218,10 @@
                 vehicle: document.getElementById('vehicle').value,
                 fileBase64: fileBase64,
                 fileName: fileName
+                sender: document.getElementById('sender').value, // <-- เพิ่มบรรทัดนี้เข้ามา
+                refNo: document.getElementById('refNo').value,
+                docDate: document.getElementById('docDate').value,
+                // ... (ข้อมูลอื่นๆ คงเดิม)
             };
 
             fetch(SCRIPT_URL, {
@@ -255,3 +259,4 @@
     </script>
 </body>
 </html>
+
