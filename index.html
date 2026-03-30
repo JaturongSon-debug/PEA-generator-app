@@ -16,6 +16,11 @@
         .fc-event { cursor: pointer; border-radius: 4px; border: none; padding: 2px 4px; }
         .fc-toolbar-title { font-size: 1.25rem !important; color: #7B3896; font-weight: 600; }
         #loading-overlay { display: none; background: rgba(255,255,255,0.8); backdrop-filter: blur(2px); }
+        .pre-line { white-space: pre-line; } 
+        /* Scrollbar สำหรับ Dashboard List */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -39,7 +44,25 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <div id="dashboard-tab" class="block">
+        <div id="dashboard-tab" class="block animate-fade-in">
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-600">
+                    <h3 class="text-gray-500 text-sm font-medium">งานทั้งหมดในระบบ</h3>
+                    <p class="text-3xl font-bold text-gray-800 mt-2" id="stat-total">กำลังโหลด...</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
+                    <h3 class="text-gray-500 text-sm font-medium">กำลังปฏิบัติงานวันนี้</h3>
+                    <p class="text-3xl font-bold text-gray-800 mt-2"><span id="stat-today">-</span> <span class="text-sm font-normal text-gray-500">งาน</span></p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-500 flex flex-col">
+                    <h3 class="text-gray-500 text-sm font-medium mb-2 border-b pb-2">รถที่กำลังออกปฏิบัติงานวันนี้</h3>
+                    <ul id="vehicle-status-list" class="flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-20 space-y-2">
+                        <li class="text-sm text-gray-400">กำลังประมวลผลข้อมูลรถ...</li>
+                    </ul>
+                </div>
+            </div>
+
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <h2 class="text-xl font-semibold mb-4 pea-purple-text flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -51,7 +74,6 @@
 
         <div id="form-tab" class="hidden">
             <div class="bg-white rounded-xl shadow-sm p-8 max-w-4xl mx-auto border border-gray-100 relative">
-                
                 <div id="loading-overlay" class="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl">
                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700 mb-3"></div>
                     <p class="text-purple-700 font-medium">กำลังบันทึกข้อมูลและอัปโหลดไฟล์...</p>
@@ -60,37 +82,47 @@
                 <h2 class="text-2xl font-semibold mb-6 pea-purple-text border-b pb-4">บันทึกแจ้งงานติดตั้งเครื่องกำเนิดไฟฟ้า</h2>
                 <form id="jobForm" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">จาก <span class="text-red-500">*</span></label>
-                            <input type="text" id="sender" value="กฟจ.อต." required class="block w-full border rounded-md p-2.5 focus:border-purple-500 focus:ring-purple-500 transition" placeholder="ระบุหน่วยงานผู้ส่ง...">
-                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">จาก <span class="text-red-500">*</span></label><input type="text" id="sender" value="กฟจ.อต." required class="block w-full border rounded-md p-2.5 focus:border-purple-500 focus:ring-purple-500"></div>
                         <div><label class="block text-sm font-medium text-gray-700 mb-1">ถึง</label><input type="text" value="กสฟ.น2" readonly class="block w-full rounded-md bg-gray-200 p-2.5 text-gray-600"></div>
-                        
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">เลขที่บันทึก <span class="text-red-500">*</span></label><input type="text" id="refNo" required class="block w-full border rounded-md p-2.5" placeholder="น.2 กสฟ.(ผรผ.)..."></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">เลขที่บันทึก <span class="text-red-500">*</span></label><input type="text" id="refNo" required class="block w-full border rounded-md p-2.5"></div>
                         <div><label class="block text-sm font-medium text-gray-700 mb-1">วันที่ตามบันทึก <span class="text-red-500">*</span></label><input type="date" id="docDate" required class="block w-full border rounded-md p-2.5"></div>
-                        <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">เรียน</label><input type="text" value="อก.สฟ." readonly class="block w-full rounded-md bg-gray-200 p-2.5 text-gray-600"></div>
-                        <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">เรื่อง <span class="text-red-500">*</span></label><input type="text" id="subject" required class="block w-full border rounded-md p-2.5" placeholder="ขอรับการสนับสนุนเครื่องกำเนิดไฟฟ้า..."></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">เรื่อง <span class="text-red-500">*</span></label><input type="text" id="subject" required class="block w-full border rounded-md p-2.5"></div>
                     </div>
 
-                    <h3 class="text-lg font-medium text-gray-900 mt-8 mb-4">รายละเอียดการปฏิบัติงาน</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <h3 class="text-lg font-medium text-gray-900 mt-8 mb-4 border-b pb-2">รายละเอียดการปฏิบัติงาน</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                         <div><label class="block text-sm font-medium text-gray-700 mb-1">ตั้งแต่วันที่ <span class="text-red-500">*</span></label><input type="date" id="startDate" required class="block w-full border rounded-md p-2.5"></div>
                         <div><label class="block text-sm font-medium text-gray-700 mb-1">ถึงวันที่ <span class="text-red-500">*</span></label><input type="date" id="endDate" required class="block w-full border rounded-md p-2.5"></div>
-                        <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">จุดติดตั้ง/สถานที่ <span class="text-red-500">*</span></label><textarea id="location" required rows="2" class="block w-full border rounded-md p-2.5" placeholder="ระบุสถานที่ จุดติดตั้ง..."></textarea></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">ขนาดหม้อแปลง (kVA) <span class="text-red-500">*</span></label><input type="number" id="kVA" required class="block w-full border rounded-md p-2.5" placeholder="เช่น 500"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">กระแสไฟฟ้าสูงสุด (A) <span class="text-red-500">*</span></label><input type="number" id="maxCurrent" required class="block w-full border rounded-md p-2.5" placeholder="เช่น 720"></div>
-                        <div class="md:col-span-2">
+                    </div>
+
+                    <div id="dynamicLocations" class="space-y-4">
+                        <div class="location-item bg-purple-50 p-4 rounded-lg border border-purple-100 relative shadow-sm">
+                            <h4 class="text-purple-800 font-semibold mb-3 text-sm flex items-center"><span class="bg-purple-200 text-purple-800 px-2 py-1 rounded-full text-xs mr-2 loc-number">จุดที่ 1</span></h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">สถานที่ติดตั้ง <span class="text-red-500">*</span></label><input type="text" required class="loc-name block w-full border rounded-md p-2 text-sm" placeholder="ระบุสถานที่..."></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">หม้อแปลง(kVA)<span class="text-red-500">*</span></label><input type="number" required class="loc-kva block w-full border rounded-md p-2 text-sm" placeholder="เช่น 500"></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">กระแสสูงสุด(A)<span class="text-red-500">*</span></label><input type="number" required class="loc-amp block w-full border rounded-md p-2 text-sm" placeholder="เช่น 720"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="addLocationRow()" class="mt-2 flex items-center text-sm font-medium text-purple-700 bg-white border border-purple-300 hover:bg-purple-50 px-4 py-2 rounded-md transition shadow-sm">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> เพิ่มจุดติดตั้งเพิ่มเติม
+                    </button>
+
+                    <div class="grid grid-cols-1 mt-6">
+                        <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-1">กำหนดรถยนต์ที่ปฏิบัติงาน <span class="text-red-500">*</span></label>
                             <select id="vehicle" required class="block w-full border rounded-md p-2.5 bg-white">
                                 <option value="">-- เลือกรถเครื่องกำเนิดไฟฟ้า --</option>
-                                <option>รถเครื่องกำเนิดไฟฟ้า 500kW (ทะเบียน กง 1234)</option>
-                                <option>รถเครื่องกำเนิดไฟฟ้า 1000kW (ทะเบียน กง 5678)</option>
-                                <option>รถเครื่องกำเนิดไฟฟ้า 1200kW (ทะเบียน ฮข 9999)</option>
+                                <option>รถเครื่องกำเนิดไฟฟ้า 500kW (กง 1234)</option>
+                                <option>รถเครื่องกำเนิดไฟฟ้า 1000kW (กง 5678)</option>
+                                <option>รถเครื่องกำเนิดไฟฟ้า 1200kW (ฮข 9999)</option>
                             </select>
                         </div>
-                        <div class="md:col-span-2 bg-purple-50 p-4 rounded-lg border border-purple-100">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                             <label class="block text-sm font-medium text-gray-700 mb-2">แนบไฟล์บันทึกต้นทาง (.pdf)</label>
-                            <input type="file" id="pdfFile" accept=".pdf" class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-white file:text-purple-700 file:border-purple-200 file:border hover:file:bg-purple-100 transition cursor-pointer">
+                            <input type="file" id="pdfFile" accept=".pdf" class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-white file:text-purple-700 file:border-purple-200 file:border hover:file:bg-purple-100 cursor-pointer">
                         </div>
                     </div>
 
@@ -104,34 +136,38 @@
     </div>
 
     <div id="eventModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 backdrop-blur-sm">
-        <div class="relative top-20 mx-auto p-0 border w-11/12 md:w-1/2 lg:w-1/3 shadow-2xl rounded-xl bg-white overflow-hidden">
+        <div class="relative top-10 mx-auto p-0 border w-11/12 md:w-2/3 lg:w-1/2 shadow-2xl rounded-xl bg-white overflow-hidden mb-10">
             <div class="pea-purple px-6 py-4 flex justify-between items-center">
                 <h3 class="text-lg font-medium text-white" id="modalTitle">รายละเอียดงาน</h3>
-                <button id="closeModalIcon" class="text-white hover:text-gray-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <button id="closeModalIcon" class="text-white hover:text-gray-200"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-            <div class="px-6 py-4 space-y-3">
-                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">จาก (ผู้แจ้ง):</span><span class="w-2/3 text-sm text-gray-800 font-medium" id="modalSender"></span></div>
-                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">เลขที่บันทึก:</span><span class="w-2/3 text-sm" id="modalRef"></span></div>
-                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">สถานที่ติดตั้ง:</span><span class="w-2/3 text-sm" id="modalLocation"></span></div>
-                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">ระยะเวลา:</span><span class="w-2/3 text-sm" id="modalDate"></span></div>
-                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">รถยนต์ที่ใช้:</span><span class="w-2/3 text-sm font-semibold text-purple-700" id="modalVehicle"></span></div>
-                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">สเปคทางไฟฟ้า:</span><span class="w-2/3 text-sm" id="modalLoad"></span></div>
-                <div class="mt-4 pt-2" id="pdfLinkContainer">
-                    </div>
+            <div class="px-6 py-4 space-y-3 max-h-[70vh] overflow-y-auto">
+                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/4 text-sm text-gray-500">จาก (ผู้แจ้ง):</span><span class="w-3/4 text-sm font-medium text-gray-800" id="modalSender"></span></div>
+                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/4 text-sm text-gray-500">เลขที่บันทึก:</span><span class="w-3/4 text-sm" id="modalRef"></span></div>
+                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/4 text-sm text-gray-500">ระยะเวลา:</span><span class="w-3/4 text-sm" id="modalDate"></span></div>
+                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/4 text-sm text-gray-500">รถยนต์ที่ใช้:</span><span class="w-3/4 text-sm font-semibold text-purple-700" id="modalVehicle"></span></div>
+                
+                <div class="flex pb-2 border-b border-gray-100 bg-gray-50 p-3 rounded-md mt-2">
+                    <span class="w-1/4 text-sm text-gray-500 font-semibold mt-1">สถานที่ติดตั้ง:</span>
+                    <span class="w-3/4 text-sm text-gray-800 pre-line leading-relaxed" id="modalLocation"></span>
+                </div>
+                <div class="flex pb-2 border-b border-gray-100 bg-purple-50 p-3 rounded-md mt-2">
+                    <span class="w-1/4 text-sm text-gray-500 font-semibold mt-1">สเปคไฟฟ้า:</span>
+                    <span class="w-3/4 text-sm text-gray-800 pre-line leading-relaxed" id="modalLoad"></span>
+                </div>
+                <div class="mt-4 pt-2" id="pdfLinkContainer"></div>
             </div>
-            <div class="bg-gray-50 px-6 py-3 border-t flex justify-end">
-                <button id="closeModalBtn" class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-md shadow-sm hover:bg-gray-50">ปิดหน้าต่าง</button>
+            <div class="bg-gray-100 px-6 py-3 border-t flex justify-end">
+                <button id="closeModalBtn" class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-md shadow-sm hover:bg-gray-200">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 🔴 นำ Web App URL ของคุณมาวางตรงนี้ครับ 👇
+        // 🔴 วาง Web App URL ตรงนี้ 👇
         // ==========================================
-        const SCRIPT_URL = 'https://github.com/JaturongSon-debug/PEA-generator-app.git'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/xxxxxxxxxxxxxxx/exec'; 
 
         let calendar;
 
@@ -143,6 +179,50 @@
             }
         }
 
+        // ฟังก์ชันประมวลผลและอัปเดตตัวเลข Dashboard
+        function updateDashboardStats(eventsData) {
+            document.getElementById('stat-total').innerText = eventsData.length;
+            
+            let today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let activeTodayCount = 0;
+            let vehicleListHTML = '';
+
+            eventsData.forEach(ev => {
+                let start = new Date(ev.start);
+                // End date ถูกบวก 1 มาแล้วจากหลังบ้าน เพื่อให้ FullCalendar แสดงผลคลุมวันสุดท้าย
+                // เวลาเทียบจริงต้องลบกลับ 1 วัน หรือเช็คว่าวันนี้น้อยกว่า end
+                let end = new Date(ev.end);
+                end.setDate(end.getDate() - 1); 
+                end.setHours(23, 59, 59, 999);
+
+                // ถ้า "วันนี้" อยู่ในช่วงระหว่าง วันเริ่ม ถึง วันสิ้นสุด
+                if (today >= start && today <= end) {
+                    activeTodayCount++;
+                    // ดึงเฉพาะสถานที่บรรทัดแรกมาแสดงสั้นๆ
+                    let shortLocation = ev.extendedProps.location.split('\n')[0].replace(/^\d+\.\s*/, '');
+                    
+                    vehicleListHTML += `
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2 mt-0.5">●</span>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-800">${ev.extendedProps.vehicle}</p>
+                                <p class="text-xs text-gray-500 truncate w-48" title="${shortLocation}">📍 ${shortLocation}</p>
+                            </div>
+                        </li>
+                    `;
+                }
+            });
+
+            document.getElementById('stat-today').innerText = activeTodayCount;
+            
+            if(vehicleListHTML === '') {
+                vehicleListHTML = '<li class="text-sm text-gray-500 italic">ไม่มีรถเครื่องกำเนิดไฟฟ้าออกปฏิบัติงานในวันนี้</li>';
+            }
+            document.getElementById('vehicle-status-list').innerHTML = vehicleListHTML;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             calendar = new FullCalendar.Calendar(calendarEl, {
@@ -151,19 +231,31 @@
                 height: 650,
                 headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listWeek' },
                 buttonText: { today: 'วันนี้', month: 'เดือน', list: 'รายการ' },
-                events: SCRIPT_URL, 
+                // ใช้ Custom Function ดึงข้อมูล เพื่อเอาข้อมูลมาอัปเดต Dashboard ด้วย
+                events: function(info, successCallback, failureCallback) {
+                    fetch(SCRIPT_URL)
+                        .then(response => response.json())
+                        .then(data => {
+                            successCallback(data);
+                            updateDashboardStats(data); // เรียกอัปเดต Dashboard หลังจากได้ข้อมูล
+                        })
+                        .catch(error => {
+                            console.error('Error fetching events:', error);
+                            failureCallback(error);
+                        });
+                },
                 eventClick: function(info) {
                     document.getElementById('modalTitle').textContent = info.event.title;
-                    document.getElementById('modalSender').textContent = info.event.extendedProps.sender || '-'; // แสดงข้อมูลผู้ส่ง
+                    document.getElementById('modalSender').textContent = info.event.extendedProps.sender || '-';
                     document.getElementById('modalRef').textContent = info.event.extendedProps.ref;
                     document.getElementById('modalLocation').textContent = info.event.extendedProps.location;
+                    document.getElementById('modalLoad').textContent = info.event.extendedProps.load;
                     
                     let startDate = info.event.start.toLocaleDateString('th-TH');
                     let endDate = info.event.end ? new Date(info.event.end.getTime() - 86400000).toLocaleDateString('th-TH') : startDate;
                     document.getElementById('modalDate').textContent = startDate + ' ถึง ' + endDate;
                     
                     document.getElementById('modalVehicle').textContent = info.event.extendedProps.vehicle;
-                    document.getElementById('modalLoad').textContent = info.event.extendedProps.load;
 
                     let pdfContainer = document.getElementById('pdfLinkContainer');
                     if (info.event.extendedProps.pdfLink) {
@@ -182,6 +274,40 @@
             document.getElementById('closeModalIcon').addEventListener('click', closeModal);
         });
 
+        // ----------------------------------------------------
+        // ฟังก์ชันจัดการจุดติดตั้งแบบ Dynamic
+        // ----------------------------------------------------
+        function updateLocationNumbers() {
+            const items = document.querySelectorAll('.location-item');
+            items.forEach((item, index) => {
+                item.querySelector('.loc-number').textContent = `จุดที่ ${index + 1}`;
+            });
+        }
+
+        function addLocationRow() {
+            const container = document.getElementById('dynamicLocations');
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'location-item bg-white p-4 rounded-lg border border-gray-200 relative shadow-sm mt-3';
+            
+            rowDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-3 border-b pb-2">
+                    <h4 class="text-purple-800 font-semibold text-sm flex items-center">
+                        <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs mr-2 loc-number">จุดที่ X</span>
+                    </h4>
+                    <button type="button" onclick="this.closest('.location-item').remove(); updateLocationNumbers();" class="text-red-500 hover:text-red-700 text-xs font-medium flex items-center bg-red-50 px-2 py-1 rounded">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> ลบจุดนี้
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">สถานที่ติดตั้ง <span class="text-red-500">*</span></label><input type="text" required class="loc-name block w-full border rounded-md p-2 text-sm" placeholder="ระบุสถานที่..."></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">หม้อแปลง(kVA)<span class="text-red-500">*</span></label><input type="number" required class="loc-kva block w-full border rounded-md p-2 text-sm" placeholder="เช่น 500"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">กระแสสูงสุด(A)<span class="text-red-500">*</span></label><input type="number" required class="loc-amp block w-full border rounded-md p-2 text-sm" placeholder="เช่น 720"></div>
+                </div>
+            `;
+            container.appendChild(rowDiv);
+            updateLocationNumbers();
+        }
+
         function getBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -191,22 +317,27 @@
             });
         }
 
+        // จัดการ Submit
         document.getElementById('jobForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             document.getElementById('loading-overlay').style.display = 'flex';
 
-            let fileInput = document.getElementById('pdfFile');
-            let fileBase64 = '';
-            let fileName = '';
+            let locNames = []; let locKvas = []; let locAmps = [];
+            document.querySelectorAll('.location-item').forEach((item, index) => {
+                let listNum = document.querySelectorAll('.location-item').length > 1 ? `${index + 1}. ` : '';
+                locNames.push(listNum + item.querySelector('.loc-name').value);
+                locKvas.push(listNum + item.querySelector('.loc-kva').value);
+                locAmps.push(listNum + item.querySelector('.loc-amp').value);
+            });
 
+            let fileInput = document.getElementById('pdfFile');
+            let fileBase64 = ''; let fileName = '';
             if (fileInput.files.length > 0) {
                 let file = fileInput.files[0];
                 fileBase64 = await getBase64(file);
                 fileName = file.name;
             }
 
-            // เพิ่ม sender ลงใน payload
             let payload = {
                 sender: document.getElementById('sender').value,
                 refNo: document.getElementById('refNo').value,
@@ -214,42 +345,33 @@
                 subject: document.getElementById('subject').value,
                 startDate: document.getElementById('startDate').value,
                 endDate: document.getElementById('endDate').value,
-                location: document.getElementById('location').value,
-                kVA: document.getElementById('kVA').value,
-                maxCurrent: document.getElementById('maxCurrent').value,
+                location: locNames.join('\n'),
+                kVA: locKvas.join('\n'),
+                maxCurrent: locAmps.join('\n'),
                 vehicle: document.getElementById('vehicle').value,
                 fileBase64: fileBase64,
                 fileName: fileName
             };
 
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            })
+            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(response => response.json())
             .then(data => {
                 document.getElementById('loading-overlay').style.display = 'none';
                 if(data.status === 'success') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'บันทึกสำเร็จ!',
-                        text: 'ข้อมูลถูกส่งเข้าฐานข้อมูลเรียบร้อยแล้ว',
-                        confirmButtonColor: '#7B3896'
-                    }).then(() => {
+                    Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', text: 'ข้อมูลถูกส่งเข้าฐานข้อมูลเรียบร้อยแล้ว', confirmButtonColor: '#7B3896' })
+                    .then(() => {
                         document.getElementById('jobForm').reset();
-                        calendar.refetchEvents(); 
+                        const dynamicContainer = document.getElementById('dynamicLocations');
+                        while(dynamicContainer.children.length > 1) { dynamicContainer.removeChild(dynamicContainer.lastChild); }
+                        updateLocationNumbers();
+                        calendar.refetchEvents(); // จะทำการโหลดปฏิทินและ Dashboard ใหม่พร้อมกัน
                         showTab('dashboard');
                     });
                 }
             })
             .catch(error => {
                 document.getElementById('loading-overlay').style.display = 'none';
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
-                    confirmButtonColor: '#7B3896'
-                });
+                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกข้อมูลได้', confirmButtonColor: '#7B3896' });
             });
         });
     </script>
