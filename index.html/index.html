@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบแจ้งงานติดตั้งเครื่องกำเนิดไฟฟ้า | ผรผ.กสฟ.น2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f4f6f8; }
+        .pea-purple { background-color: #7B3896; }
+        .pea-purple-text { color: #7B3896; }
+        .fc-event { cursor: pointer; border-radius: 4px; border: none; padding: 2px 4px; }
+        .fc-toolbar-title { font-size: 1.25rem !important; color: #7B3896; font-weight: 600; }
+        #loading-overlay { display: none; background: rgba(255,255,255,0.8); backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <nav class="pea-purple text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#7B3896] shadow-inner">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M13 7h-2v2h2V7zm0-4h-2v2h2V3zM9 7H7v2h2V7zm0-4H7v2h2V3zM5 7H3v2h2V7zm0-4H3v2h2V3zm12 6h-2v2h2V9zm0-4h-2v2h2V5zM2 13v2h16v-2H2zm16-2v-1a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v1h16z"/></svg>
+                    </div>
+                    <span class="font-semibold text-lg hidden sm:block">ระบบจัดการงานเครื่องกำเนิดไฟฟ้า (ผรผ.กสฟ.น2)</span>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="showTab('dashboard')" class="hover:bg-purple-800 px-4 py-2 rounded-md text-sm font-medium transition shadow-sm bg-purple-700">แดชบอร์ด & ปฏิทิน</button>
+                    <button onclick="showTab('form')" class="hover:bg-purple-800 px-4 py-2 rounded-md text-sm font-medium transition bg-white text-[#7B3896]">บันทึกงานใหม่</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <div id="dashboard-tab" class="block">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h2 class="text-xl font-semibold mb-4 pea-purple-text flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    ตารางปฏิบัติงาน
+                </h2>
+                <div id='calendar' class="mt-4"></div>
+            </div>
+        </div>
+
+        <div id="form-tab" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm p-8 max-w-4xl mx-auto border border-gray-100 relative">
+                
+                <div id="loading-overlay" class="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700 mb-3"></div>
+                    <p class="text-purple-700 font-medium">กำลังบันทึกข้อมูลและอัปโหลดไฟล์...</p>
+                </div>
+
+                <h2 class="text-2xl font-semibold mb-6 pea-purple-text border-b pb-4">บันทึกแจ้งงานติดตั้งเครื่องกำเนิดไฟฟ้า</h2>
+                <form id="jobForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">จาก</label><input type="text" value="กฟจ.อต." readonly class="block w-full rounded-md bg-gray-200 p-2.5 text-gray-600"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">ถึง</label><input type="text" value="กสฟ.น2" readonly class="block w-full rounded-md bg-gray-200 p-2.5 text-gray-600"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">เลขที่บันทึก <span class="text-red-500">*</span></label><input type="text" id="refNo" required class="block w-full border rounded-md p-2.5" placeholder="น.2 กสฟ.(ผรผ.)..."></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">วันที่ตามบันทึก <span class="text-red-500">*</span></label><input type="date" id="docDate" required class="block w-full border rounded-md p-2.5"></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">เรียน</label><input type="text" value="อก.สฟ." readonly class="block w-full rounded-md bg-gray-200 p-2.5 text-gray-600"></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">เรื่อง <span class="text-red-500">*</span></label><input type="text" id="subject" required class="block w-full border rounded-md p-2.5" placeholder="ขอรับการสนับสนุนเครื่องกำเนิดไฟฟ้า..."></div>
+                    </div>
+
+                    <h3 class="text-lg font-medium text-gray-900 mt-8 mb-4">รายละเอียดการปฏิบัติงาน</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">ตั้งแต่วันที่ <span class="text-red-500">*</span></label><input type="date" id="startDate" required class="block w-full border rounded-md p-2.5"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">ถึงวันที่ <span class="text-red-500">*</span></label><input type="date" id="endDate" required class="block w-full border rounded-md p-2.5"></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">จุดติดตั้ง/สถานที่ <span class="text-red-500">*</span></label><textarea id="location" required rows="2" class="block w-full border rounded-md p-2.5" placeholder="ระบุสถานที่ จุดติดตั้ง..."></textarea></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">ขนาดหม้อแปลง (kVA) <span class="text-red-500">*</span></label><input type="number" id="kVA" required class="block w-full border rounded-md p-2.5" placeholder="เช่น 500"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">กระแสไฟฟ้าสูงสุด (A) <span class="text-red-500">*</span></label><input type="number" id="maxCurrent" required class="block w-full border rounded-md p-2.5" placeholder="เช่น 720"></div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">กำหนดรถยนต์ที่ปฏิบัติงาน <span class="text-red-500">*</span></label>
+                            <select id="vehicle" required class="block w-full border rounded-md p-2.5 bg-white">
+                                <option value="">-- เลือกรถเครื่องกำเนิดไฟฟ้า --</option>
+                                <option>รถเครื่องกำเนิดไฟฟ้า 500kW (ทะเบียน กง 1234)</option>
+                                <option>รถเครื่องกำเนิดไฟฟ้า 1000kW (ทะเบียน กง 5678)</option>
+                                <option>รถเครื่องกำเนิดไฟฟ้า 1200kW (ทะเบียน ฮข 9999)</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2 bg-purple-50 p-4 rounded-lg border border-purple-100">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">แนบไฟล์บันทึกต้นทาง (.pdf)</label>
+                            <input type="file" id="pdfFile" accept=".pdf" class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-white file:text-purple-700 file:border-purple-200 file:border hover:file:bg-purple-100 transition cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-6 border-t mt-6">
+                        <button type="submit" class="pea-purple text-white px-8 py-2.5 rounded-md hover:bg-purple-800 font-medium shadow-md transition">บันทึกข้อมูลเข้าสู่ระบบ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="eventModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50 backdrop-blur-sm">
+        <div class="relative top-20 mx-auto p-0 border w-11/12 md:w-1/2 lg:w-1/3 shadow-2xl rounded-xl bg-white overflow-hidden">
+            <div class="pea-purple px-6 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-white" id="modalTitle">รายละเอียดงาน</h3>
+                <button id="closeModalIcon" class="text-white hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="px-6 py-4 space-y-3">
+                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">เลขที่บันทึก:</span><span class="w-2/3 text-sm" id="modalRef"></span></div>
+                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">สถานที่ติดตั้ง:</span><span class="w-2/3 text-sm" id="modalLocation"></span></div>
+                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">ระยะเวลา:</span><span class="w-2/3 text-sm" id="modalDate"></span></div>
+                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">รถยนต์ที่ใช้:</span><span class="w-2/3 text-sm font-semibold text-purple-700" id="modalVehicle"></span></div>
+                <div class="flex pb-2 border-b border-gray-100"><span class="w-1/3 text-sm text-gray-500">สเปคทางไฟฟ้า:</span><span class="w-2/3 text-sm" id="modalLoad"></span></div>
+                <div class="mt-4 pt-2" id="pdfLinkContainer">
+                    </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 border-t flex justify-end">
+                <button id="closeModalBtn" class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-md shadow-sm hover:bg-gray-50">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔴 นำ Web App URL ของคุณมาวางตรงนี้ครับ 👇
+        // ==========================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/xxxxxxxxxxxxxxx/exec'; 
+
+        let calendar;
+
+        function showTab(tabName) {
+            document.getElementById('dashboard-tab').style.display = tabName === 'dashboard' ? 'block' : 'none';
+            document.getElementById('form-tab').style.display = tabName === 'form' ? 'block' : 'none';
+            if (tabName === 'dashboard' && calendar) {
+                setTimeout(() => calendar.updateSize(), 100);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'th',
+                height: 650,
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listWeek' },
+                buttonText: { today: 'วันนี้', month: 'เดือน', list: 'รายการ' },
+                events: SCRIPT_URL, // ✅ ดึงข้อมูลจาก Google Sheets อัตโนมัติ
+                eventClick: function(info) {
+                    document.getElementById('modalTitle').textContent = info.event.title;
+                    document.getElementById('modalRef').textContent = info.event.extendedProps.ref;
+                    document.getElementById('modalLocation').textContent = info.event.extendedProps.location;
+                    
+                    let startDate = info.event.start.toLocaleDateString('th-TH');
+                    let endDate = info.event.end ? new Date(info.event.end.getTime() - 86400000).toLocaleDateString('th-TH') : startDate;
+                    document.getElementById('modalDate').textContent = startDate + ' ถึง ' + endDate;
+                    
+                    document.getElementById('modalVehicle').textContent = info.event.extendedProps.vehicle;
+                    document.getElementById('modalLoad').textContent = info.event.extendedProps.load;
+
+                    let pdfContainer = document.getElementById('pdfLinkContainer');
+                    if (info.event.extendedProps.pdfLink) {
+                        pdfContainer.innerHTML = `<a href="${info.event.extendedProps.pdfLink}" target="_blank" class="inline-flex items-center text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm shadow-sm"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> เปิดดูไฟล์แนบ (PDF)</a>`;
+                    } else {
+                        pdfContainer.innerHTML = `<span class="text-sm text-gray-400 italic">ไม่มีไฟล์แนบ</span>`;
+                    }
+                    
+                    document.getElementById('eventModal').classList.remove('hidden');
+                }
+            });
+            calendar.render();
+
+            const closeModal = () => document.getElementById('eventModal').classList.add('hidden');
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            document.getElementById('closeModalIcon').addEventListener('click', closeModal);
+        });
+
+        // ฟังก์ชันแปลงไฟล์เป็น Base64
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // จัดการเมื่อกด Submit Form
+        document.getElementById('jobForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // แสดงหน้าโหลดดิ้ง
+            document.getElementById('loading-overlay').style.display = 'flex';
+
+            let fileInput = document.getElementById('pdfFile');
+            let fileBase64 = '';
+            let fileName = '';
+
+            if (fileInput.files.length > 0) {
+                let file = fileInput.files[0];
+                fileBase64 = await getBase64(file);
+                fileName = file.name;
+            }
+
+            let payload = {
+                refNo: document.getElementById('refNo').value,
+                docDate: document.getElementById('docDate').value,
+                subject: document.getElementById('subject').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                location: document.getElementById('location').value,
+                kVA: document.getElementById('kVA').value,
+                maxCurrent: document.getElementById('maxCurrent').value,
+                vehicle: document.getElementById('vehicle').value,
+                fileBase64: fileBase64,
+                fileName: fileName
+            };
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading-overlay').style.display = 'none';
+                if(data.status === 'success') {
+                    // โชว์ Alert สวยๆ แบบสำเร็จ
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกสำเร็จ!',
+                        text: 'ข้อมูลถูกส่งเข้าฐานข้อมูลเรียบร้อยแล้ว',
+                        confirmButtonColor: '#7B3896'
+                    }).then(() => {
+                        document.getElementById('jobForm').reset();
+                        calendar.refetchEvents(); // โหลดปฏิทินใหม่
+                        showTab('dashboard');
+                    });
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading-overlay').style.display = 'none';
+                // โชว์ Alert Error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+                    confirmButtonColor: '#7B3896'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
